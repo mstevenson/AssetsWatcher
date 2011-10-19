@@ -1,3 +1,4 @@
+using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
@@ -39,6 +40,9 @@ public sealed class AssetsWatcher {
 	#region Properties
 	
 	private string _path;
+	/// <summary>
+	/// Path is relative to the Assets folder.
+	/// </summary>
 	public string Path {
 		get { return _path; }
 		set {
@@ -49,6 +53,9 @@ public sealed class AssetsWatcher {
 	
 	
 	private int _timerInterval = 1000;
+	/// <summary>
+	/// The milliseconds to delay when scanning an assets directory. 1000 ms by default.
+	/// </summary>
 	public int TimerInterval {
 		get { return _timerInterval; }
 		set {
@@ -82,6 +89,14 @@ public sealed class AssetsWatcher {
 	
 	#region Constructors
 	
+	public AssetsWatcher (UnityAssetType filter) : this("", filter)
+	{
+	}
+	
+	public AssetsWatcher () : this("", UnityAssetType.All)
+	{
+	}
+	
 	public AssetsWatcher (string path) : this(path, UnityAssetType.All)
 	{
 	}
@@ -90,12 +105,12 @@ public sealed class AssetsWatcher {
 	{
 		timer = new System.Timers.Timer ();
 		timer.Elapsed += delegate(object sender, System.Timers.ElapsedEventArgs e) {
-			// We need to allow WatchForChanges to wait for EditorApplication.update since
+			// We need to allow ScanForChanges to wait for EditorApplication.update since
 			// it needs to make use of EditorApplication properties that are only available then
-			EditorApplication.update += WatchForChanges;
+			EditorApplication.update += ScanForChanges;
 		};
 		_filter = filter;
-		_path = path;
+		_path = path == null ? "" : path;
 		Init ();
 	}
 
@@ -114,14 +129,16 @@ public sealed class AssetsWatcher {
 	/// </remarks>
 	private void Init ()
 	{
-		if (Path == "" || Path == null)
+		string path = System.IO.Path.Combine (Application.dataPath, Path);
+		Debug.Log(path);
+		
+		if (!Directory.Exists (path)) {
+			Debug.LogError ("AssetsWatcher can't find folder " + Path);
 			return;
-
-		if (!Directory.Exists (Path))
-			return;
+		}
 		
 		// Grab initial filesystem state and start our timer to check for updates
-		assetFile = GetAssets (Path, IncludeSubdirectories, Filter);
+		assetFile = GetAssets (path, IncludeSubdirectories, Filter);
 		timer.Interval = TimerInterval;
 		timer.Enabled = true;
 	}
@@ -133,11 +150,12 @@ public sealed class AssetsWatcher {
 	/// <remarks>
 	/// This runs only during EditorApplication.update, so EditorApplication properties can safely be used.
 	/// </remarks>
-	private void WatchForChanges ()
+	private void ScanForChanges ()
 	{
-		EditorApplication.update -= WatchForChanges;
+		EditorApplication.update -= ScanForChanges;
 		
-		AssetFileInfo[] currentData = GetAssets (Path, IncludeSubdirectories, Filter);
+		string path = System.IO.Path.Combine (Application.dataPath, Path);
+		AssetFileInfo[] currentData = GetAssets (path, IncludeSubdirectories, Filter);
 		CheckAssetChanges (currentData, assetFile);
 		assetFile = currentData;
 	}
