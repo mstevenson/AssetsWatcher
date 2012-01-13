@@ -154,9 +154,14 @@ public sealed class AssetsWatcher {
 		EditorApplication.update -= ScanForChanges;
 		
 		string path = System.IO.Path.Combine (Application.dataPath, Path);
-		AssetFileInfo[] currentData = GetAssets (path, IncludeSubdirectories, Filter);
-		CheckAssetChanges (currentData, assetFile);
-		assetFile = currentData;
+		try {
+			AssetFileInfo[] currentData = GetAssets (path, IncludeSubdirectories, Filter);
+			CheckAssetChanges (currentData, assetFile);
+			assetFile = currentData;
+		} catch (System.Exception ex) {
+			// AssetsWatcher lost sight of the folder
+			assetFile = null;
+		}
 	}
 	
 	
@@ -180,14 +185,13 @@ public sealed class AssetsWatcher {
 		}
 		
 		DirectoryInfo dir = new DirectoryInfo (path);
+		// FIXME throw an exception instead of returning null
+		if (!dir.Exists) {
+			throw new System.IO.DirectoryNotFoundException ();
+		}
 		
 		// Grab directories
-		FileSystemInfo[] fsInfo;
-		try {
-			fsInfo = dir.GetDirectories (stringFilter, depth);
-		} catch {
-			// FIXME stop the Assets Watcher if the directory has changed from under our feet
-		}
+		FileSystemInfo[] fsInfo = dir.GetDirectories (stringFilter, depth);
 		
 		// If searching for more than just directories, search everything
 		if (typeFilter != UnityAssetType.Folder) {
