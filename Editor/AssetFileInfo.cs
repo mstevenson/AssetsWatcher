@@ -12,11 +12,19 @@ public enum UnityAssetType
 	Scene,
 	Material,
 	Shader,
+	MonoScript,
 	Model,
 	Text,
 	Texture,
 	Audio,
 	Video,
+	Cubemap,
+	Animation,
+	Flare,
+	GUISkin,
+	PhysicMaterial,
+	Font,
+	Prefab,
 	All,
 	None
 }
@@ -41,11 +49,19 @@ public class AssetFileInfo
 		{ UnityAssetType.Scene, new string[] {".unity"} },
 		{ UnityAssetType.Material, new string[] {".mat"} },
 		{ UnityAssetType.Shader, new string[] {".shader"} },
+		{ UnityAssetType.MonoScript, new string[] {".cs, .js, .boo"} },
 		{ UnityAssetType.Model, new string[] {".ma", ".mb", ".fbx", ".max", ".jas", ".c4d", ".blend", ".lwo", ".skp", ".3ds", ".obj", ".dxf"} },
 		{ UnityAssetType.Texture, new string[] {".psd", ".jpg", ".jpeg", ".png", ".exr", ".tif", ".tiff", ".gif", ".bmp", ".tga", ".iff", ".pict"} },
 		{ UnityAssetType.Audio, new string[] {".wav", ".aif", ".aiff", ".mp3", ".ogg"} },
 		{ UnityAssetType.Video, new string[] {".mov", ".avi", ".asf", ".mpg", ".mpeg", ".mp4"} },
-		{ UnityAssetType.Text, new string[] {".txt", ".xml"} }
+		{ UnityAssetType.Text, new string[] {".txt", ".xml"} },
+		{ UnityAssetType.Cubemap, new string[] {".cubemap"} },
+		{ UnityAssetType.Animation, new string[] {".anim"} },
+		{ UnityAssetType.GUISkin, new string[] {".guiskin"} },
+		{ UnityAssetType.PhysicMaterial, new string[] {".physicMaterial"} },
+		{ UnityAssetType.Flare, new string[] {".flare"} },
+		{ UnityAssetType.Font, new string[] {".fontsettings"} },
+		{ UnityAssetType.Prefab, new string[] {".prefab"} }
 	};
 	
 	

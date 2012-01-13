@@ -182,21 +182,23 @@ public sealed class AssetsWatcher {
 		DirectoryInfo dir = new DirectoryInfo (path);
 		
 		// Grab directories
-		FileSystemInfo[] fsInfo = dir.GetDirectories (stringFilter, depth);
+		FileSystemInfo[] fsInfo;
+		try {
+			fsInfo = dir.GetDirectories (stringFilter, depth);
+		} catch {
+			// FIXME stop the Assets Watcher if the directory has changed from under our feet
+		}
 		
 		// If searching for more than just directories, search everything
 		if (typeFilter != UnityAssetType.Folder) {
-			// Grab files, concatenate with directories
-			
-			
-			// FIXME linq is not working
-			
 			string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
-			
-			fsInfo = dir.GetFiles ("*.*", depth)
-				.Where (f => extensions.Contains (f.Extension.ToLower ())).ToArray ();
-			//				.Contains (new FileInfo(f).Extension, System.StringComparer.OrdinalIgnoreCase)
-			//				.Concat (fsInfo).ToArray ();
+			if (typeFilter == UnityAssetType.All) {
+				// Find all Unity asset files
+				fsInfo = dir.GetFiles ("*.*", depth);
+			} else {
+				// Find Unity asset file of a specific type
+				fsInfo = dir.GetFiles ("*.*", depth).Where (f => extensions.Contains (f.Extension.ToLower ())).ToArray ();
+			}
 		}
 		
 		// Construct AssetFileInfo object for each FileSystemInfo object

@@ -1,11 +1,14 @@
 using UnityEditor;
 using UnityEngine;
 
-// Super secret undocumented attribute that calls a static constructor when the Unity editor loads.
 [InitializeOnLoad]
 /// <summary>
 /// Example AssetsWater usage.
 /// </summary>
+/// <remarks>
+/// Add the undocumented attribute <code>[InitializeOnLoad]</code> to this class
+/// to call the static constructor as soon as the Unity editor loads.
+/// </remarks>
 public static class ExampleWatcher
 {	
 	/// <summary>
@@ -13,8 +16,13 @@ public static class ExampleWatcher
 	/// </summary>
 	static ExampleWatcher ()
 	{	
-		AssetsWatcher watcher = new AssetsWatcher ("", UnityAssetType.Material);
-		Debug.Log ("Began watching 'Assets/" + watcher.Path + "' for asset changes");
+		// Watch for materials
+		UnityAssetType typeToWatch = UnityAssetType.All;
+		
+		// Watch the Assets/ root for changes
+		AssetsWatcher watcher = new AssetsWatcher ("", typeToWatch);
+		
+		Debug.Log ("Began watching 'Assets/" + watcher.Path + "' for asset changes of type " + typeToWatch);
 		
 		watcher.OnCreated += delegate(AssetFileInfo asset) {
 			Debug.Log ("Created asset '" + asset.Name + "' of type " + asset.Type);
