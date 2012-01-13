@@ -22,7 +22,7 @@ public static class ExampleWatcher
 		// Watch the Assets/ root for changes
 		AssetsWatcher watcher = new AssetsWatcher ("", typeToWatch);
 		
-		Debug.Log ("Began watching 'Assets/" + watcher.Path + "' for asset changes of type " + typeToWatch);
+		Debug.Log ("Began watching 'Assets/" + watcher.Path + "' for changes to assets of type " + typeToWatch);
 		
 		watcher.OnCreated += delegate(AssetFileInfo asset) {
 			Debug.Log ("Created asset '" + asset.Name + "' of type " + asset.Type);
