@@ -89,17 +89,11 @@ public sealed class AssetsWatcher {
 	
 	#region Constructors
 	
-	public AssetsWatcher (UnityAssetType filter) : this("", filter)
-	{
-	}
+	public AssetsWatcher (UnityAssetType filter) : this("", filter) {}
 	
-	public AssetsWatcher () : this("", UnityAssetType.All)
-	{
-	}
+	public AssetsWatcher () : this("", UnityAssetType.All) {}
 	
-	public AssetsWatcher (string path) : this(path, UnityAssetType.All)
-	{
-	}
+	public AssetsWatcher (string path) : this(path, UnityAssetType.All) {}
 	
 	public AssetsWatcher (string path, UnityAssetType filter)
 	{
@@ -176,7 +170,7 @@ public sealed class AssetsWatcher {
 			stringFilter = "";
 			string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
 			for (int i = 0; i < extensions.Length; i++) {
-				stringFilter += @"*\.";
+				stringFilter += @"*";
 				stringFilter += extensions [i];
 				if (i < extensions.Length - 1) {
 					stringFilter += "|";
@@ -185,16 +179,18 @@ public sealed class AssetsWatcher {
 		}
 		
 		DirectoryInfo dir = new DirectoryInfo (path);
-		// FIXME throw an exception instead of returning null
 		if (!dir.Exists) {
 			throw new System.IO.DirectoryNotFoundException ();
 		}
 		
-		// Grab directories
+		// Grab folders
 		FileSystemInfo[] fsInfo = dir.GetDirectories (stringFilter, depth);
 		
-		// If searching for more than just directories, search everything
-		if (typeFilter != UnityAssetType.Folder) {
+		if (typeFilter == UnityAssetType.All) {
+			// Search all folders and files
+			fsInfo = fsInfo.Concat (dir.GetFiles ("*.*", depth)).ToArray ();
+		} else if (typeFilter != UnityAssetType.Folder) {
+			// Search only files, no folders
 			string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
 			if (typeFilter == UnityAssetType.All) {
 				// Find all Unity asset files
