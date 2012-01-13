@@ -1,3 +1,6 @@
+// Copyright (c) 2012 Michael Stevenson <michael@theboxfort.com>, The Box Fort LLC
+// This code is distributed under the MIT license
+
 using UnityEngine;
 using UnityEditor;
 using System;
@@ -25,7 +28,7 @@ public enum UnityAssetType
 	PhysicMaterial,
 	Font,
 	Prefab,
-	All,
+	All, // includes folders
 	None
 }
 

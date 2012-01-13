@@ -1,3 +1,6 @@
+// Copyright (c) 2012 Michael Stevenson <michael@theboxfort.com>, The Box Fort LLC
+// This code is distributed under the MIT license
+
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
@@ -9,8 +12,7 @@ using System.Linq;
 /// Raise events for asset file changes within a specified folder.
 /// </summary>
 /// <remarks>
-/// Based on Kevin Heeney's custom FileSystemWatcher.
-/// It can be prohibitively expensive when scanning a dense file structure.
+/// Inspired by Kevin Heeney's custom FileSystemWatcher.
 /// </remarks>
 public sealed class AssetsWatcher {
 	
@@ -18,11 +20,26 @@ public sealed class AssetsWatcher {
 	public delegate void FileMovedHandler (AssetFileInfo assetBefore, AssetFileInfo assetAfter);
 	
 	#region Events
-
+	
+	/// <summary>
+	/// Occurs when an asset is first created.
+	/// </summary>
 	public event FileEventHandler OnCreated;
+	/// <summary>
+	/// Occurs when an asset is deleted or is moved out of scope.
+	/// </summary>
 	public event FileEventHandler OnDeleted;
+	/// <summary>
+	/// Occurs when the content of an asset is modified.
+	/// </summary>
 	public event FileEventHandler OnModified;
+	/// <summary>
+	/// Occurs when an asset is renamed in-place.
+	/// </summary>
 	public event FileMovedHandler OnRenamed;
+	/// <summary>
+	/// Occurs when an asset is moved to a new location within scope.
+	/// </summary>
 	public event FileMovedHandler OnMoved;
 	
 	#endregion
@@ -41,7 +58,7 @@ public sealed class AssetsWatcher {
 	
 	private string _path;
 	/// <summary>
-	/// Path is relative to the Assets folder.
+	/// The watched path relative to the current project's Assets folder.
 	/// </summary>
 	public string Path {
 		get { return _path; }
@@ -66,6 +83,12 @@ public sealed class AssetsWatcher {
 	
 	
 	private bool _includeSubdirectories = false;
+	/// <summary>
+	/// Scan all subdirectories below the AssetsWatcher's main directory.
+	/// </summary>
+	/// <remarks>
+	/// This may be prohibitively expensive when scanning a dense file structure.
+	/// </remarks>
 	public bool IncludeSubdirectories {
 		get { return _includeSubdirectories; }
 		set {
@@ -89,21 +112,35 @@ public sealed class AssetsWatcher {
 	
 	#region Constructors
 	
-	public AssetsWatcher (UnityAssetType filter) : this("", filter) {}
+	/// <summary>
+	/// Watch the root of the Assets folder for changes to a given asset type.
+	/// </summary>
+	public AssetsWatcher (UnityAssetType type) : this("", type) {}
 	
+	/// <summary>
+	/// Watch the root of the Assets folder for changes to all asset types.
+	/// </summary>
 	public AssetsWatcher () : this("", UnityAssetType.All) {}
 	
+	/// <summary>
+	/// Watch a given path relative to the Assets folder for changes to all asset types.
+	/// </summary>
 	public AssetsWatcher (string path) : this(path, UnityAssetType.All) {}
 	
-	public AssetsWatcher (string path, UnityAssetType filter)
+	/// <summary>
+	/// Watch a given path relative to the Assets folder for changes to a given asset type.
+	/// </summary>
+	public AssetsWatcher (string path, UnityAssetType type)
 	{
+		// FIXME make path work on both Mac and Win
+		
 		timer = new System.Timers.Timer ();
 		timer.Elapsed += delegate(object sender, System.Timers.ElapsedEventArgs e) {
 			// We need to allow ScanForChanges to wait for EditorApplication.update since
 			// it needs to make use of EditorApplication properties that are only available then
 			EditorApplication.update += ScanForChanges;
 		};
-		_filter = filter;
+		_filter = type;
 		_path = path == null ? "" : path;
 		Init ();
 	}
@@ -141,7 +178,7 @@ public sealed class AssetsWatcher {
 	/// Look for file and folder changes at regular intervals.
 	/// </summary>
 	/// <remarks>
-	/// This runs only during EditorApplication.update, so EditorApplication properties can safely be used.
+	/// This runs only during the EditorApplication.update callback, so EditorApplication properties can safely be used.
 	/// </remarks>
 	private void ScanForChanges ()
 	{

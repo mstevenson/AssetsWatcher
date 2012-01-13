@@ -1,3 +1,6 @@
+// Copyright (c) 2012 Michael Stevenson <michael@theboxfort.com>, The Box Fort LLC
+// This code is distributed under the MIT license
+
 using UnityEditor;
 using UnityEngine;
 
@@ -7,7 +10,7 @@ using UnityEngine;
 /// </summary>
 /// <remarks>
 /// Add the undocumented attribute <code>[InitializeOnLoad]</code> to this class
-/// to call the static constructor as soon as the Unity editor loads.
+/// to call the static constructor as soon as the Unity project loads.
 /// </remarks>
 public static class ExampleWatcher
 {	
