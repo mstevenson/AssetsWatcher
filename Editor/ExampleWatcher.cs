@@ -25,26 +25,26 @@ public static class ExampleWatcher
 		// Watch the Assets/ root for changes
 		AssetsWatcher watcher = new AssetsWatcher ("", typeToWatch);
 		
-		Debug.Log ("Began watching 'Assets/" + watcher.Path + "' for changes to assets of type " + typeToWatch);
+		Debug.Log ("ExampleWatcher: Began watching 'Assets/" + watcher.Path + "' for changes to assets of type " + typeToWatch);
 		
 		watcher.OnCreated += delegate(AssetFileInfo asset) {
-			Debug.Log ("Created asset '" + asset.Name + "' of type " + asset.Type);
+			Debug.Log ("ExampleWatcher: Created asset '" + asset.Name + "' of type " + asset.Type);
 		};
 		
 		watcher.OnDeleted += delegate(AssetFileInfo asset) {
-			Debug.Log ("Deleted asset '" + asset.Name + "' of type " + asset.Type);
+			Debug.Log ("ExampleWatcher: Deleted asset '" + asset.Name + "' of type " + asset.Type);
 		};
 		
 		watcher.OnModified += delegate(AssetFileInfo asset) {
-			Debug.Log ("Changed asset '" + asset.Name + "' of type " + asset.Type);
+			Debug.Log ("ExampleWatcher: Changed asset '" + asset.Name + "' of type " + asset.Type);
 		};
 		
 		watcher.OnMoved += delegate(AssetFileInfo assetBefore, AssetFileInfo assetAfter) {
-			Debug.Log ("Moved asset '" + assetBefore.Name + "' to '" + assetAfter.Name + "'");
+			Debug.Log ("ExampleWatcher: Moved asset '" + assetBefore.Name + "' to '" + assetAfter.Name + "'");
 		};
 		
 		watcher.OnRenamed += delegate(AssetFileInfo assetBefore, AssetFileInfo assetAfter) {
-			Debug.Log ("Renamed asset '" + assetBefore.Name + "' to '" + assetAfter.Name + "'");
+			Debug.Log ("ExampleWatcher: Renamed asset '" + assetBefore.Name + "' to '" + assetAfter.Name + "'");
 		};
 	}
 	
