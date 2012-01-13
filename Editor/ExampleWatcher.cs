@@ -16,7 +16,7 @@ public static class ExampleWatcher
 	/// </summary>
 	static ExampleWatcher ()
 	{	
-		// Watch for materials
+		// Watch for all types
 		UnityAssetType typeToWatch = UnityAssetType.All;
 		
 		// Watch the Assets/ root for changes
