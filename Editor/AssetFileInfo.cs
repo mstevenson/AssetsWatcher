@@ -43,7 +43,7 @@ public class AssetFileInfo
 	public string Guid { get; private set; }
 	
 	
-	private static Dictionary<UnityAssetType, string[]> _assetExtensions = new Dictionary<UnityAssetType, string[]>() {
+	private static Dictionary<UnityAssetType, string[]> assetExtensions = new Dictionary<UnityAssetType, string[]>() {
 		{ UnityAssetType.Folder, new string[] {""} },
 		{ UnityAssetType.Asset, new string[] {".asset"} },
 		{ UnityAssetType.Scene, new string[] {".unity"} },
@@ -65,36 +65,6 @@ public class AssetFileInfo
 	};
 	
 	
-	
-	/// <summary>
-	/// Extension (with leading dot) for the given Unity asset type
-	/// </summary>
-	public static string[] GetExtensionsForType (UnityAssetType type)
-	{
-		string[] ext;
-		try {
-			ext = _assetExtensions[type];
-		} catch {
-			return new string[0];
-		}
-		return ext;
-	}
-	
-	
-	public static UnityAssetType GetTypeForExtension (string extension)
-	{
-		foreach (var kvp in _assetExtensions) {
-			foreach (string s in kvp.Value) {
-				if (s == extension) {
-					return kvp.Key;
-				}
-			}
-		}
-		return UnityAssetType.None;
-	}
-	
-	
-	
 	public AssetFileInfo (FileSystemInfo f)
 	{
 		this.Name = f.Name;
@@ -112,8 +82,7 @@ public class AssetFileInfo
 	/// <summary>
 	/// Return the path for this asset relative to the current project's Assets folder.
 	/// </summary>
-	public string AssetsRelativePath
-	{
+	public string AssetsRelativePath {
 		get {
 			string path = FullName;
 			int length = Application.dataPath.Length - 6;
@@ -122,7 +91,35 @@ public class AssetFileInfo
 			return path.Remove (0, length);
 		}
 	}
-
+	
+	/// <summary>
+	/// Extension (with leading dot) for the given Unity asset type
+	/// </summary>
+	public static string[] GetExtensionsForType (UnityAssetType type)
+	{
+		string[] ext;
+		try {
+			ext = assetExtensions [type];
+		} catch {
+			return new string[0];
+		}
+		return ext;
+	}
+	
+	public static UnityAssetType GetTypeForExtension (string extension)
+	{
+		if (extension == "")
+			return UnityAssetType.Folder;
+		foreach (var kvp in assetExtensions) {
+			foreach (string s in kvp.Value) {
+				if (s == extension) {
+					return kvp.Key;
+				}
+			}
+		}
+		return UnityAssetType.None;
+	}
+	
 
 	public override int GetHashCode ()
 	{
@@ -146,5 +143,5 @@ public class AssetFileInfo
 	{
 		return !System.Object.Equals (x, y);
 	}
-
+	
 }
