@@ -3,7 +3,7 @@ AssetsWatcher
 
 AssetsWatcher is a Unity Editor utility that provides event handling in response to Unity asset file changes.
 
-Creating a new watcher:
+Create a new watcher:
 
 1. Create a new class file in Unity's Editor folder. This class does not require a base class, you don't need to inherit from either MonoBehavior or Editor.
 2. Add the attribute InitializeOnLoad to the class.
@@ -15,6 +15,8 @@ Creating a new watcher:
 	- OnModified
 	- OnMoved
 	- OnRenamed
+
+Example implementation:
 
 	[InitializeOnLoad]
 	public static class ExampleWatcher
