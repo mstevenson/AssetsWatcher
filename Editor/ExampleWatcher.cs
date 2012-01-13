@@ -12,9 +12,9 @@ public static class ExampleWatcher
 	/// Static constructor called immediately when the project loads.
 	/// </summary>
 	static ExampleWatcher ()
-	{
+	{	
 		AssetsWatcher watcher = new AssetsWatcher ("", UnityAssetType.Material);
-		Debug.Log ("Began watching '" + watcher.Path + "' for asset changes");
+		Debug.Log ("Began watching 'Assets/" + watcher.Path + "' for asset changes");
 		
 		watcher.OnCreated += delegate(AssetFileInfo asset) {
 			Debug.Log ("Created asset '" + asset.Name + "' of type " + asset.Type);

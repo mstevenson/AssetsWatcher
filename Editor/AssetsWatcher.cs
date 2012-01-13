@@ -130,7 +130,6 @@ public sealed class AssetsWatcher {
 	private void Init ()
 	{
 		string path = System.IO.Path.Combine (Application.dataPath, Path);
-		Debug.Log(path);
 		
 		if (!Directory.Exists (path)) {
 			Debug.LogError ("AssetsWatcher can't find folder " + Path);
@@ -161,25 +160,43 @@ public sealed class AssetsWatcher {
 	}
 	
 	
-	private AssetFileInfo[] GetAssets (string path, bool includeSubDirectories, UnityAssetType filter)
+	private AssetFileInfo[] GetAssets (string path, bool includeSubDirectories, UnityAssetType typeFilter)
 	{
 		// Set up subdirectory inclusion
 		SearchOption depth = includeSubDirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
-		
+	
 		// Set up filename filter
 		string stringFilter = "*";
-		if (filter != UnityAssetType.All) {
-			stringFilter += AssetFileInfo.AssetExtensions[filter];
+		if (typeFilter != UnityAssetType.All) {
+			stringFilter = "";
+			string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
+			for (int i = 0; i < extensions.Length; i++) {
+				stringFilter += @"*\.";
+				stringFilter += extensions [i];
+				if (i < extensions.Length - 1) {
+					stringFilter += "|";
+				}
+			}
 		}
 		
 		DirectoryInfo dir = new DirectoryInfo (path);
 		
 		// Grab directories
 		FileSystemInfo[] fsInfo = dir.GetDirectories (stringFilter, depth);
+		
 		// If searching for more than just directories, search everything
-		if (filter != UnityAssetType.Folder) {
+		if (typeFilter != UnityAssetType.Folder) {
 			// Grab files, concatenate with directories
-			fsInfo = dir.GetFiles (stringFilter, depth).Concat (fsInfo).ToArray ();
+			
+			
+			// FIXME linq is not working
+			
+			string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
+			
+			fsInfo = dir.GetFiles ("*.*", depth)
+				.Where (f => extensions.Contains (f.Extension.ToLower ())).ToArray ();
+			//				.Contains (new FileInfo(f).Extension, System.StringComparer.OrdinalIgnoreCase)
+			//				.Concat (fsInfo).ToArray ();
 		}
 		
 		// Construct AssetFileInfo object for each FileSystemInfo object
@@ -188,6 +205,7 @@ public sealed class AssetsWatcher {
 		// Don't return anything that's not in Unity's asset database
 		return data.Where (f => (f.Guid != null && f.Guid != "")).ToArray ();
 	}
+	
 	
 	
 	/// <summary>
@@ -218,8 +236,10 @@ public sealed class AssetsWatcher {
 				}
 			}
 			
-			// Check for file modifications
-			CheckFileModification (newStaticFiles[i], oldStaticFiles[i]);
+			// Modified file
+			if (CheckFileModification (newStaticFiles[i], oldStaticFiles[i])) {
+				OnModified (newStaticFiles[i]);
+			}
 		}
 		
 		// Created file
@@ -236,7 +256,7 @@ public sealed class AssetsWatcher {
 	}
 	
 	
-	private void CheckFileModification (AssetFileInfo newAsset, AssetFileInfo oldAsset)
+	private bool CheckFileModification (AssetFileInfo newAsset, AssetFileInfo oldAsset)
 	{
 		bool modified = false;
 		
@@ -249,9 +269,7 @@ public sealed class AssetsWatcher {
 		else if (newAsset.Size != oldAsset.Size)
 			modified = true;
 		
-		if (modified && OnModified != null) {
-			OnModified (newAsset);
-		}
+		return modified && OnModified != null;
 	}
 
 	

@@ -12,7 +12,13 @@ public enum UnityAssetType
 	Scene,
 	Material,
 	Shader,
-	All
+	Model,
+	Text,
+	Texture,
+	Audio,
+	Video,
+	All,
+	None
 }
 
 
@@ -28,27 +34,50 @@ public class AssetFileInfo
 	public UnityAssetType Type { get; private set; }
 	public string Guid { get; private set; }
 	
-	private static Dictionary<string, UnityAssetType> _assetTypes = new Dictionary<string, UnityAssetType>() {
-		{ "", UnityAssetType.Folder },
-		{ ".asset", UnityAssetType.Asset },
-		{ ".unity", UnityAssetType.Scene },
-		{ ".mat", UnityAssetType.Material },
-		{ ".shader", UnityAssetType.Shader }
+	
+	private static Dictionary<UnityAssetType, string[]> _assetExtensions = new Dictionary<UnityAssetType, string[]>() {
+		{ UnityAssetType.Folder, new string[] {""} },
+		{ UnityAssetType.Asset, new string[] {".asset"} },
+		{ UnityAssetType.Scene, new string[] {".unity"} },
+		{ UnityAssetType.Material, new string[] {".mat"} },
+		{ UnityAssetType.Shader, new string[] {".shader"} },
+		{ UnityAssetType.Model, new string[] {".ma", ".mb", ".fbx", ".max", ".jas", ".c4d", ".blend", ".lwo", ".skp", ".3ds", ".obj", ".dxf"} },
+		{ UnityAssetType.Texture, new string[] {".psd", ".jpg", ".jpeg", ".png", ".exr", ".tif", ".tiff", ".gif", ".bmp", ".tga", ".iff", ".pict"} },
+		{ UnityAssetType.Audio, new string[] {".wav", ".aif", ".aiff", ".mp3", ".ogg"} },
+		{ UnityAssetType.Video, new string[] {".mov", ".avi", ".asf", ".mpg", ".mpeg", ".mp4"} },
+		{ UnityAssetType.Text, new string[] {".txt", ".xml"} }
 	};
-	public static Dictionary<string, UnityAssetType> AssetTypes {
-		get { return _assetTypes; }
+	
+	
+	
+	/// <summary>
+	/// Extension (with leading dot) for the given Unity asset type
+	/// </summary>
+	public static string[] GetExtensionsForType (UnityAssetType type)
+	{
+		string[] ext;
+		try {
+			ext = _assetExtensions[type];
+		} catch {
+			return new string[0];
+		}
+		return ext;
 	}
 	
-	private static Dictionary<UnityAssetType, string> _assetExtensions = new Dictionary<UnityAssetType, string>() {
-		{ UnityAssetType.Folder, "" },
-		{ UnityAssetType.Asset, ".asset" },
-		{ UnityAssetType.Scene, ".unity" },
-		{ UnityAssetType.Material, ".mat" },
-		{ UnityAssetType.Shader, ".shader" }
-	};
-	public static Dictionary<UnityAssetType, string> AssetExtensions {
-		get { return _assetExtensions; }
+	
+	public static UnityAssetType GetTypeForExtension (string extension)
+	{
+		foreach (var kvp in _assetExtensions) {
+			foreach (string s in kvp.Value) {
+				if (s == extension) {
+					return kvp.Key;
+				}
+			}
+		}
+		return UnityAssetType.None;
 	}
+	
+	
 	
 	public AssetFileInfo (FileSystemInfo f)
 	{
@@ -61,8 +90,7 @@ public class AssetFileInfo
 		this.Size = (f is FileInfo) ? Size : 0;
 		// Warning: Guid can only be set during EditorApplication.update callback
 		this.Guid = AssetDatabase.AssetPathToGUID (AssetsRelativePath);
-		if (AssetTypes.ContainsKey (f.Extension))
-			Type = AssetTypes[f.Extension];
+		this.Type = GetTypeForExtension (f.Extension);
 	}
 	
 	/// <summary>
@@ -102,4 +130,5 @@ public class AssetFileInfo
 	{
 		return !System.Object.Equals (x, y);
 	}
+
 }
