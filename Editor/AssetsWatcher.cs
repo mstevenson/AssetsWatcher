@@ -9,7 +9,7 @@ using System.Linq;
 
 
 /// <summary>
-/// Raise events for asset file changes within a specified folder.
+/// Raise events for Unity asset file changes.
 /// </summary>
 /// <remarks>
 /// Inspired by Kevin Heeney's custom FileSystemWatcher.
@@ -132,8 +132,6 @@ public sealed class AssetsWatcher {
 	/// </summary>
 	public AssetsWatcher (string path, UnityAssetType type)
 	{
-		// FIXME make path work on both Mac and Win
-		
 		timer = new System.Timers.Timer ();
 		timer.Elapsed += delegate(object sender, System.Timers.ElapsedEventArgs e) {
 			// We need to allow ScanForChanges to wait for EditorApplication.update since
@@ -223,26 +221,25 @@ public sealed class AssetsWatcher {
 		// Grab folders
 		FileSystemInfo[] fsInfo = dir.GetDirectories (stringFilter, depth);
 		
+		// Grab files
 		if (typeFilter == UnityAssetType.All) {
-			// Search all folders and files
 			fsInfo = fsInfo.Concat (dir.GetFiles ("*.*", depth)).ToArray ();
 		} else if (typeFilter != UnityAssetType.Folder) {
-			// Search only files, no folders
-			string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
 			if (typeFilter == UnityAssetType.All) {
 				// Find all Unity asset files
 				fsInfo = dir.GetFiles ("*.*", depth);
 			} else {
 				// Find Unity asset file of a specific type
+				string[] extensions = AssetFileInfo.GetExtensionsForType (typeFilter);
 				fsInfo = dir.GetFiles ("*.*", depth).Where (f => extensions.Contains (f.Extension.ToLower ())).ToArray ();
 			}
 		}
 		
 		// Construct AssetFileInfo object for each FileSystemInfo object
-		AssetFileInfo[] data = fsInfo.Select (f => new AssetFileInfo (f)).ToArray ();
+		AssetFileInfo[] assetFileInfo = fsInfo.Select (f => new AssetFileInfo (f)).ToArray ();
 		
 		// Don't return anything that's not in Unity's asset database
-		return data.Where (f => (f.Guid != null && f.Guid != "")).ToArray ();
+		return assetFileInfo.Where (f => (f.Guid != null && f.Guid != "")).ToArray ();
 	}
 	
 	
@@ -257,7 +254,6 @@ public sealed class AssetsWatcher {
 		
 		List<AssetFileInfo> createdFiles = newAsset.Except (oldAsset).ToList ();
 		List<AssetFileInfo> deletedFiles = oldAsset.Except (newAsset).ToList ();
-		
 		
 		// Check for changes in existing files
 		for (int i = 0; i < oldStaticFiles.Count; i++) {
@@ -274,19 +270,16 @@ public sealed class AssetsWatcher {
 						OnMoved (oldStaticFiles[i], newStaticFiles[i]);
 				}
 			}
-			
 			// Modified file
 			if (CheckFileModification (newStaticFiles[i], oldStaticFiles[i])) {
 				OnModified (newStaticFiles[i]);
 			}
 		}
-		
 		// Created file
 		foreach (AssetFileInfo f in createdFiles) {
 			if (OnCreated != null)
 				OnCreated (f);
 		}
-		
 		// Deleted file
 		foreach (AssetFileInfo f in deletedFiles) {
 			if (OnDeleted != null)
@@ -298,7 +291,6 @@ public sealed class AssetsWatcher {
 	private bool CheckFileModification (AssetFileInfo newAsset, AssetFileInfo oldAsset)
 	{
 		bool modified = false;
-		
 		if (newAsset.LastWriteTime != oldAsset.LastWriteTime)
 			modified = true;
 		else if (newAsset.Attributes != oldAsset.Attributes)
@@ -307,7 +299,6 @@ public sealed class AssetsWatcher {
 			modified = true;
 		else if (newAsset.Size != oldAsset.Size)
 			modified = true;
-		
 		return modified && OnModified != null;
 	}
 
