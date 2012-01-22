@@ -38,10 +38,6 @@ public class AssetFileInfo
 	public string Name { get; private set; }
 	public string FullName { get; private set; }
 	public string DirectoryName { get; private set; }
-	public DateTime CreationTime { get; private set; }
-	public DateTime LastWriteTime { get; private set; }
-	public string Attributes { get; private set; }
-	public long Size { get; private set; }
 	public UnityAssetType Type { get; private set; }
 	public string Guid { get; private set; }
 	
@@ -68,19 +64,15 @@ public class AssetFileInfo
 	};
 	
 	
-	public AssetFileInfo (FileSystemInfo f)
+	public AssetFileInfo (string path)
 	{
-		this.Name = f.Name;
-		this.FullName = f.FullName;
-		this.DirectoryName = (f is FileInfo) ? ((FileInfo)f).DirectoryName : ((DirectoryInfo)f).Parent.FullName;
-		this.CreationTime = f.CreationTimeUtc;
-		this.LastWriteTime = f.LastWriteTimeUtc;
-		this.Attributes = f.Attributes.ToString ();
-		this.Size = (f is FileInfo) ? Size : 0;
-		// Warning: Guid can only be set during EditorApplication.update callback
-		this.Guid = AssetDatabase.AssetPathToGUID (AssetsRelativePath);
-		this.Type = GetTypeForExtension (f.Extension);
+		this.Name = Path.GetFileName (path);
+		this.FullName = path;
+		this.DirectoryName = Path.GetDirectoryName (path);
+		this.Guid = AssetDatabase.AssetPathToGUID (path);
+		this.Type = GetTypeForExtension (Path.GetExtension (path));
 	}
+	
 	
 	/// <summary>
 	/// Return the path for this asset relative to the current project's Assets folder.
