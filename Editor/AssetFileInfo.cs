@@ -1,12 +1,10 @@
 // Copyright (c) 2012 Michael Stevenson <michael@theboxfort.com>, The Box Fort LLC
 // This code is distributed under the MIT license
-
 using UnityEngine;
 using UnityEditor;
 using System;
 using System.Collections.Generic;
 using System.IO;
-
 
 public enum UnityAssetType
 {
@@ -32,17 +30,19 @@ public enum UnityAssetType
 	None
 }
 
-
 public class AssetFileInfo
 {
 	public string Name { get; private set; }
+
 	public string FullName { get; private set; }
+
 	public string DirectoryName { get; private set; }
+
 	public UnityAssetType Type { get; private set; }
+
 	public string Guid { get; private set; }
 	
-	
-	private static Dictionary<UnityAssetType, string[]> assetExtensions = new Dictionary<UnityAssetType, string[]>() {
+	private static Dictionary<UnityAssetType, string[]> assetExtensions = new Dictionary<UnityAssetType, string[]> () {
 		{ UnityAssetType.Folder, new string[] {""} },
 		{ UnityAssetType.Asset, new string[] {".asset"} },
 		{ UnityAssetType.Scene, new string[] {".unity"} },
@@ -62,7 +62,6 @@ public class AssetFileInfo
 		{ UnityAssetType.Font, new string[] {".fontsettings"} },
 		{ UnityAssetType.Prefab, new string[] {".prefab"} }
 	};
-	
 	
 	public AssetFileInfo (string path)
 	{
@@ -114,7 +113,6 @@ public class AssetFileInfo
 		}
 		return UnityAssetType.None;
 	}
-	
 
 	public override int GetHashCode ()
 	{
@@ -131,7 +129,7 @@ public class AssetFileInfo
 	
 	public static bool operator == (AssetFileInfo x, AssetFileInfo y)
 	{
-		return System.Object.Equals(x, y);
+		return System.Object.Equals (x, y);
 	}
 	
 	public static bool operator != (AssetFileInfo x, AssetFileInfo y)

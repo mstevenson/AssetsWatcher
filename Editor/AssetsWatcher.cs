@@ -1,115 +1,200 @@
 // Copyright (c) 2012 Michael Stevenson <michael@theboxfort.com>, The Box Fort LLC
 // This code is distributed under the MIT license
-
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-
 /// <summary>
 /// Raise events for Unity asset file changes.
 /// </summary>
 /// <remarks>
-/// Inspired by Kevin Heeney's custom FileSystemWatcher.
-/// 
-/// Added the undocumented attribute <code>[InitializeOnLoad]</code> to this class
-/// to call the static constructor as soon as the Unity project loads.
+/// The undocumented attribute <code>[InitializeOnLoad]</code>
+/// call a static constructor when a Unity project is loaded.
 /// </remarks>
-//[InitializeOnLoad]
-public class AssetsWatcher : AssetPostprocessor {
-//	
-//	public delegate void FileEventHandler (AssetFileInfo asset);
-//	public delegate void FileMovedHandler (AssetFileInfo assetBefore, AssetFileInfo assetAfter);
-//	
-//	#region Events
-//	
-//	
-//	// FIXME use generic events which are triggered based on a given asset type
-//	
-//	// FIXME watch specific directories, and specific file types
-//	
-//	
-//	/// <summary>
-//	/// Occurs when an asset is first created.
-//	/// </summary>
-//	public static event FileEventHandler OnCreated;
-//	/// <summary>
-//	/// Occurs when an asset is deleted or is moved out of scope.
-//	/// </summary>
-//	public static event FileEventHandler OnDeleted;
-//	/// <summary>
-//	/// Occurs when the content of an asset is modified.
-//	/// </summary>
-//	public static event FileEventHandler OnModified;
-//	/// <summary>
-//	/// Occurs when an asset is renamed in-place.
-//	/// </summary>
-//	public static event FileMovedHandler OnRenamed;
-//	/// <summary>
-//	/// Occurs when an asset is moved to a new location within scope.
-//	/// </summary>
-//	public static event FileMovedHandler OnMoved;
-//	
-//	#endregion
-//	
-//	
-//	#region Fields
-//	
-//	private static string[] allAssetPaths;
-//	
-//	#endregion
-//	
-//	
-//	#region Properties
-//	
-//	public UnityAssetType filter = UnityAssetType.All;
-//	
-//	#endregion
-//	
-//	
-//	
-//	#region Methods
-//	
-//	static void OnPostprocessAllAssets (string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromPath)
-//	{
-//		foreach (string a in importedAssets) {
-//			// If doesn't exist in our database, it was created
-//			// Otherwise it was modified
-//		}
-//		
-//		foreach (string a in deletedAssets) {
-//			if (OnDeleted != null)
-//				OnDeleted (new AssetFileInfo (a));
-//		}
-//		
-//		for (int i = 0; i < movedAssets.Length; i++) {
-//			// If it is at the same path, it was renamed
-//			// Otherwise it was moved
-//		}
-//		
-//		// Update asset paths cache
-//		allAssetPaths = AssetDatabase.GetAllAssetPaths ();
-//	}
-//	
-//	
-//	/// <summary>
-//	/// Initialize the AssetsWatcher.
-//	/// </summary>
-//	static AssetsWatcher ()
-//	{
-//		// Cache asset paths
-//		allAssetPaths = AssetDatabase.GetAllAssetPaths ();
-//	}
-//	
-//	
-//	private static AssetFileInfo[] GetAssets (UnityAssetType filter)
-//	{
-//		string[] paths = AssetDatabase.GetAllAssetPaths ();
-//		return paths.Select (p => new AssetFileInfo (p)).ToArray ();
-//	}
-//	
-//	#endregion
+[InitializeOnLoad]
+public sealed class AssetsWatcher : AssetPostprocessor
+{
 	
+	public class Watcher
+	{
+		public delegate void FileEventHandler (AssetFileInfo asset);
+		public delegate void FileMovedHandler (AssetFileInfo assetBefore,AssetFileInfo assetAfter);
+		
+		/// <summary>
+		/// Occurs when an asset is first created.
+		/// </summary>
+		public event FileEventHandler OnCreated;
+		/// <summary>
+		/// Occurs when an asset is deleted or is moved out of scope.
+		/// </summary>
+		public event FileEventHandler OnDeleted;
+		/// <summary>
+		/// Occurs when the content of an asset is modified.
+		/// </summary>
+		public event FileEventHandler OnModified;
+		/// <summary>
+		/// Occurs when an asset is renamed in-place.
+		/// </summary>
+		public event FileMovedHandler OnRenamed;
+		/// <summary>
+		/// Occurs when an asset is moved to a new location within scope.
+		/// </summary>
+		public event FileMovedHandler OnMoved;
+		
+		public readonly string basePath;
+		public readonly UnityAssetType assetType;
+		public readonly bool watchSubdirectories;
+		
+		public Watcher (string path, UnityAssetType assetType, bool watchSubdirectories)
+		{
+			this.basePath = Path.Combine ("Assets", path);
+			this.assetType = assetType;
+			this.watchSubdirectories = watchSubdirectories;
+		}
+		
+		~Watcher ()
+		{
+			AssetsWatcher.UnWatch (this);
+		}
+		
+		
+		internal void Created (string[] paths)
+		{
+			if (OnCreated != null) {
+				foreach (var p in paths) {
+					if (p.StartsWith (this.basePath)) {
+						OnCreated (new AssetFileInfo (p));
+					}
+				}
+			}
+		}
+		
+		internal void Modified (string[] paths)
+		{
+			if (OnModified != null) {
+				foreach (var p in paths) {
+					if (p.StartsWith (this.basePath)) {
+						OnModified (new AssetFileInfo (p));
+					}
+				}
+			}
+		}
+		
+//		internal void Renamed (string[] paths)
+//		{
+//			if (OnRenamed != null) {
+//				foreach (var p in paths) {
+//					if (p.StartsWith (this.path)) {
+//						OnRenamed (new AssetFileInfo (p));
+//					}
+//				}
+//			}
+//		}
+//		
+//		internal void Moved (string[] paths)
+//		{
+//			if (OnMoved != null) {
+//				foreach (var p in paths) {
+//					if (p.StartsWith (this.path)) {
+//						OnMoved (new AssetFileInfo (p));
+//					}
+//				}
+//			}
+//		}
+		
+		internal void Deleted (string[] paths)
+		{
+			if (OnDeleted != null) {
+				foreach (var p in paths) {
+					if (IsValidPath (p)) {
+						OnDeleted (new AssetFileInfo (p));
+					}
+				}
+			}
+		}
+		
+		private bool IsValidPath (string assetPath) {
+			if (watchSubdirectories)
+				return assetPath.StartsWith (this.basePath);
+			else
+				return Path.GetDirectoryName (assetPath) == this.basePath;
+		}
+	}
+	
+	
+	private static string[] allAssets;
+	private static List<Watcher> watchers;
+	
+	
+	/// <summary>
+	/// Initialize the AssetsWatcher when a project is loaded.
+	/// </summary>
+	static AssetsWatcher ()
+	{
+		// Cache asset paths
+		allAssets = AssetDatabase.GetAllAssetPaths ();
+		watchers = new List<Watcher> ();
+		
+		var a = Watch ("Qwer", UnityAssetType.All, true);
+		a.OnCreated += delegate(AssetFileInfo asset) {
+			Debug.Log ("asdf");
+		};
+	}
+	
+	
+	static void OnPostprocessAllAssets (string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromPaths)
+	{
+		string[] created = importedAssets.Except (allAssets).ToArray ();
+		string[] modified = importedAssets.Except (created).ToArray ();
+		string[] renamed =
+			(from current in movedAssets
+			join last in movedFromPaths
+				on Path.GetDirectoryName (current) equals Path.GetDirectoryName (last)
+			select current).ToArray ();
+		string[] moved = movedAssets.Except (renamed).ToArray ();
+		
+		// Dispatch asset events to available watchers
+		foreach (Watcher w in watchers) {
+			w.Created (created);
+			w.Modified (modified);
+//			w.Renamed (renamed);
+//			w.Moved (moved);
+			w.Deleted (deletedAssets);
+		}
+		
+		// Update asset paths cache
+		allAssets = AssetDatabase.GetAllAssetPaths ();
+	}
+	
+	
+	
+	public static Watcher Watch (string path)
+	{
+		return Watch (path, UnityAssetType.All, true);
+	}
+	
+	public static Watcher Watch (string path, bool useSubdirectories)
+	{
+		return Watch (path, UnityAssetType.All, useSubdirectories);
+	}
+	
+	public static Watcher Watch (UnityAssetType assetType)
+	{
+		return Watch ("", assetType, true);
+	}
+	
+	public static Watcher Watch (string path, UnityAssetType assetType, bool useSubdirectories)
+	{
+		Watcher w = new Watcher (path, assetType, useSubdirectories);
+		watchers.Add (w);
+		return w;
+	}
+	
+	
+	public static void UnWatch (Watcher watcher)
+	{
+		watchers.Remove (watcher);
+	}
 }
