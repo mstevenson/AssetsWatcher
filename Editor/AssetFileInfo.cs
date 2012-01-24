@@ -2,32 +2,32 @@
 // This code is distributed under the MIT license
 using UnityEngine;
 using UnityEditor;
-using System;
 using System.Collections.Generic;
 using System.IO;
 
+[System.Flags]
 public enum UnityAssetType
 {
-	Folder,
-	Asset,
-	Scene,
-	Material,
-	Shader,
-	Script,
-	Model,
-	Text,
-	Texture,
-	Audio,
-	Video,
-	Cubemap,
-	Animation,
-	Flare,
-	GUISkin,
-	PhysicMaterial,
-	Font,
-	Prefab,
-	All, // includes folders
-	None
+	None = 0,
+	Folder = 1,
+	Asset = 1 << 1,
+	Scene = 1 << 2,
+	Material = 1 << 3,
+	Shader = 1 << 4,
+	Script = 1 << 5,
+	Model = 1 << 6,
+	Text = 1 << 7,
+	Texture = 1 << 8,
+	Audio = 1 << 9,
+	Video = 1 << 10,
+	Cubemap = 1 << 11,
+	Animation = 1 << 12,
+	Flare = 1 << 13,
+	GUISkin = 1 << 14,
+	PhysicMaterial = 1 << 15,
+	Font = 1 << 16,
+	Prefab = 1 << 17,
+	RenderTexture = 1 << 18
 }
 
 public class AssetFileInfo
@@ -49,10 +49,10 @@ public class AssetFileInfo
 		{ UnityAssetType.Material, new string[] {".mat"} },
 		{ UnityAssetType.Shader, new string[] {".shader"} },
 		{ UnityAssetType.Script, new string[] {".cs", ".js", ".boo"} },
-		{ UnityAssetType.Model, new string[] {".ma", ".mb", ".fbx", ".max", ".jas", ".c4d", ".blend", ".lwo", ".skp", ".3ds", ".obj", ".dxf"} },
+		{ UnityAssetType.Model, new string[] {".ma", ".mb", ".fbx", ".dae", ".lxo", ".max", ".jas", ".c4d", ".blend", ".lwo", ".skp", ".3ds", ".obj", ".dxf"} },
 		{ UnityAssetType.Texture, new string[] {".psd", ".jpg", ".jpeg", ".png", ".exr", ".tif", ".tiff", ".gif", ".bmp", ".tga", ".iff", ".pict"} },
-		{ UnityAssetType.Audio, new string[] {".wav", ".aif", ".aiff", ".mp3", ".ogg"} },
-		{ UnityAssetType.Video, new string[] {".mov", ".avi", ".asf", ".mpg", ".mpeg", ".mp4"} },
+		{ UnityAssetType.Audio, new string[] {".wav", ".aif", ".aiff", ".mp3", ".ogg", ".oga", ".mod", ".it", ".s3m", ".xm"} },
+		{ UnityAssetType.Video, new string[] {".mov", ".avi", ".asf", ".mpg", ".mpeg", ".mp4", ".ogv"} },
 		{ UnityAssetType.Text, new string[] {".txt", ".xml"} },
 		{ UnityAssetType.Cubemap, new string[] {".cubemap"} },
 		{ UnityAssetType.Animation, new string[] {".anim"} },
@@ -60,7 +60,8 @@ public class AssetFileInfo
 		{ UnityAssetType.PhysicMaterial, new string[] {".physicMaterial"} },
 		{ UnityAssetType.Flare, new string[] {".flare"} },
 		{ UnityAssetType.Font, new string[] {".fontsettings"} },
-		{ UnityAssetType.Prefab, new string[] {".prefab"} }
+		{ UnityAssetType.Prefab, new string[] {".prefab"} },
+		{ UnityAssetType.RenderTexture, new string[] {".renderTexture"} }
 	};
 	
 	public AssetFileInfo (string path)
