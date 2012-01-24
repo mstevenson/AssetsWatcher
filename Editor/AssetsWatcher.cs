@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+
 /// <summary>
 /// Raise events for Unity asset file changes.
 /// </summary>
@@ -16,114 +17,6 @@ using System.Linq;
 [InitializeOnLoad]
 public sealed class AssetsWatcher : AssetPostprocessor
 {
-	
-	public class Watcher
-	{
-		public delegate void FileEventHandler (AssetFileInfo asset);
-		public delegate void FileMovedHandler (AssetFileInfo assetBefore,AssetFileInfo assetAfter);
-		
-		/// <summary>
-		/// Occurs when an asset is first created.
-		/// </summary>
-		public event FileEventHandler OnCreated;
-		/// <summary>
-		/// Occurs when an asset is deleted or is moved out of scope.
-		/// </summary>
-		public event FileEventHandler OnDeleted;
-		/// <summary>
-		/// Occurs when the content of an asset is modified.
-		/// </summary>
-		public event FileEventHandler OnModified;
-		/// <summary>
-		/// Occurs when an asset is renamed in-place.
-		/// </summary>
-		public event FileMovedHandler OnRenamed;
-		/// <summary>
-		/// Occurs when an asset is moved to a new location within scope.
-		/// </summary>
-		public event FileMovedHandler OnMoved;
-		
-		public readonly string basePath;
-		public readonly UnityAssetType assetType;
-		public readonly bool watchSubdirectories;
-		
-		public Watcher (string path, UnityAssetType assetType, bool watchSubdirectories)
-		{
-			this.basePath = Path.Combine ("Assets", path);
-			this.assetType = assetType;
-			this.watchSubdirectories = watchSubdirectories;
-		}
-		
-		~Watcher ()
-		{
-			AssetsWatcher.UnWatch (this);
-		}
-		
-		
-		internal void Created (string[] paths)
-		{
-			if (OnCreated != null) {
-				foreach (var p in paths) {
-					if (p.StartsWith (this.basePath)) {
-						OnCreated (new AssetFileInfo (p));
-					}
-				}
-			}
-		}
-		
-		internal void Modified (string[] paths)
-		{
-			if (OnModified != null) {
-				foreach (var p in paths) {
-					if (p.StartsWith (this.basePath)) {
-						OnModified (new AssetFileInfo (p));
-					}
-				}
-			}
-		}
-		
-//		internal void Renamed (string[] paths)
-//		{
-//			if (OnRenamed != null) {
-//				foreach (var p in paths) {
-//					if (p.StartsWith (this.path)) {
-//						OnRenamed (new AssetFileInfo (p));
-//					}
-//				}
-//			}
-//		}
-//		
-//		internal void Moved (string[] paths)
-//		{
-//			if (OnMoved != null) {
-//				foreach (var p in paths) {
-//					if (p.StartsWith (this.path)) {
-//						OnMoved (new AssetFileInfo (p));
-//					}
-//				}
-//			}
-//		}
-		
-		internal void Deleted (string[] paths)
-		{
-			if (OnDeleted != null) {
-				foreach (var p in paths) {
-					if (IsValidPath (p)) {
-						OnDeleted (new AssetFileInfo (p));
-					}
-				}
-			}
-		}
-		
-		private bool IsValidPath (string assetPath) {
-			if (watchSubdirectories)
-				return assetPath.StartsWith (this.basePath);
-			else
-				return Path.GetDirectoryName (assetPath) == this.basePath;
-		}
-	}
-	
-	
 	private static string[] allAssets;
 	private static List<Watcher> watchers;
 	
@@ -196,5 +89,116 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	public static void UnWatch (Watcher watcher)
 	{
 		watchers.Remove (watcher);
+	}
+}
+
+
+public class Watcher
+{
+	public delegate void FileEventHandler (AssetFileInfo asset);
+
+	public delegate void FileMovedHandler (AssetFileInfo assetBefore,AssetFileInfo assetAfter);
+		
+	/// <summary>
+	/// Occurs when an asset is first created.
+	/// </summary>
+	public event FileEventHandler OnCreated;
+	/// <summary>
+	/// Occurs when an asset is deleted or is moved out of scope.
+	/// </summary>
+	public event FileEventHandler OnDeleted;
+	/// <summary>
+	/// Occurs when the content of an asset is modified.
+	/// </summary>
+	public event FileEventHandler OnModified;
+	/// <summary>
+	/// Occurs when an asset is renamed in-place.
+	/// </summary>
+	public event FileMovedHandler OnRenamed;
+	/// <summary>
+	/// Occurs when an asset is moved to a new location within scope.
+	/// </summary>
+	public event FileMovedHandler OnMoved;
+		
+	public readonly string basePath;
+	public readonly UnityAssetType assetType;
+	public readonly bool useSubdirectories;
+		
+	public Watcher (string path, UnityAssetType assetType, bool useSubdirectories)
+	{
+		this.basePath = Path.Combine ("Assets", path);
+		this.assetType = assetType;
+		this.useSubdirectories = useSubdirectories;
+	}
+		
+	~Watcher ()
+	{
+		AssetsWatcher.UnWatch (this);
+	}
+		
+	internal void Created (string[] paths)
+	{
+		if (OnCreated != null) {
+			foreach (var p in paths) {
+				if (IsValidPath (p)) {
+					OnCreated (new AssetFileInfo (p));
+				}
+			}
+		}
+	}
+	
+	internal void Deleted (string[] paths)
+	{
+		if (OnDeleted != null) {
+			foreach (var p in paths) {
+				if (IsValidPath (p)) {
+					OnDeleted (new AssetFileInfo (p));
+				}
+			}
+		}
+	}
+		
+	internal void Modified (string[] paths)
+	{
+		if (OnModified != null) {
+			foreach (var p in paths) {
+				if (IsValidPath (p)) {
+					OnModified (new AssetFileInfo (p));
+				}
+			}
+		}
+	}
+		
+//		internal void Renamed (string[] paths)
+//		{
+//			if (OnRenamed != null) {
+//				foreach (var p in paths) {
+//					if (IsValidPath (p)) {
+//						OnRenamed (new AssetFileInfo (p));
+//					}
+//				}
+//			}
+//		}
+//		
+//		internal void Moved (string[] paths)
+//		{
+//			if (OnMoved != null) {
+//				foreach (var p in paths) {
+//					if (IsValidPath (p)) {
+//						OnMoved (new AssetFileInfo (p));
+//					}
+//				}
+//			}
+//		}
+	
+	/// <summary>
+	/// Determines whether the specified assetPath is valid given the current path constraints.
+	/// </summary>
+	private bool IsValidPath (string assetPath)
+	{
+		if (useSubdirectories)
+			return assetPath.StartsWith (this.basePath);
+		else
+			return Path.GetDirectoryName (assetPath) == this.basePath;
 	}
 }
