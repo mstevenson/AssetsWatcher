@@ -138,58 +138,55 @@ public class Watcher
 		
 	internal void Created (string[] paths)
 	{
-		if (OnCreated != null) {
-			foreach (var p in paths) {
-				if (IsValidPath (p)) {
-					OnCreated (new AssetFileInfo (p));
-				}
-			}
-		}
+		InvokeEventForPaths (paths, OnCreated);
 	}
 	
 	internal void Deleted (string[] paths)
 	{
-		if (OnDeleted != null) {
-			foreach (var p in paths) {
-				if (IsValidPath (p)) {
-					OnDeleted (new AssetFileInfo (p));
-				}
-			}
-		}
+		InvokeEventForPaths (paths, OnDeleted);
 	}
 		
 	internal void Modified (string[] paths)
 	{
-		if (OnModified != null) {
-			foreach (var p in paths) {
-				if (IsValidPath (p)) {
-					OnModified (new AssetFileInfo (p));
+		InvokeEventForPaths (paths, OnDeleted);
+	}
+		
+//	internal void Renamed (string[] paths)
+//	{
+//		if (OnRenamed == null)
+//			return;
+//		foreach (var p in paths) {
+//			if (IsValidPath (p)) {
+//				OnRenamed (new AssetFileInfo (p));
+//			}
+//		}
+//	}
+//		
+//	internal void Moved (string[] paths)
+//	{
+//		if (OnMoved == null)
+//			return;
+//		foreach (var p in paths) {
+//			if (IsValidPath (p)) {
+//				OnMoved (new AssetFileInfo (p));
+//			}
+//		}
+//	}
+	
+	private void InvokeEventForPaths (string[] paths, FileEventHandler e)
+	{
+		if (e == null)
+			return;
+		foreach (var p in paths) {
+			if (IsValidPath (p)) {
+				AssetFileInfo asset = new AssetFileInfo (p);
+				// FIXME this should test a bit flag enum
+				if (asset.Type == assetType) {
+					e (asset);
 				}
 			}
 		}
 	}
-		
-//		internal void Renamed (string[] paths)
-//		{
-//			if (OnRenamed != null) {
-//				foreach (var p in paths) {
-//					if (IsValidPath (p)) {
-//						OnRenamed (new AssetFileInfo (p));
-//					}
-//				}
-//			}
-//		}
-//		
-//		internal void Moved (string[] paths)
-//		{
-//			if (OnMoved != null) {
-//				foreach (var p in paths) {
-//					if (IsValidPath (p)) {
-//						OnMoved (new AssetFileInfo (p));
-//					}
-//				}
-//			}
-//		}
 	
 	/// <summary>
 	/// Determines whether the specified assetPath is valid given the current path constraints.
