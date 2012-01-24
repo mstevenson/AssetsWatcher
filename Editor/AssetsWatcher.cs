@@ -29,11 +29,6 @@ public sealed class AssetsWatcher : AssetPostprocessor
 		// Cache asset paths
 		allAssets = AssetDatabase.GetAllAssetPaths ();
 		watchers = new List<Watcher> ();
-		
-		var a = Watch ("Qwer", UnityAssetType.All, true);
-		a.OnCreated += delegate(AssetFileInfo asset) {
-			Debug.Log ("asdf");
-		};
 	}
 	
 	
@@ -52,8 +47,8 @@ public sealed class AssetsWatcher : AssetPostprocessor
 		foreach (Watcher w in watchers) {
 			w.Created (created);
 			w.Modified (modified);
-//			w.Renamed (renamed);
-//			w.Moved (moved);
+//			w.Renamed (renamed, renamedFrom);
+//			w.Moved (moved, movedFrom);
 			w.Deleted (deletedAssets);
 		}
 		
@@ -65,12 +60,12 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	
 	public static Watcher Watch (string path)
 	{
-		return Watch (path, UnityAssetType.All, true);
+		return Watch (path, true);
 	}
 	
 	public static Watcher Watch (string path, bool useSubdirectories)
 	{
-		return Watch (path, UnityAssetType.All, useSubdirectories);
+		return Watch (path, UnityAssetType.None, useSubdirectories);
 	}
 	
 	public static Watcher Watch (UnityAssetType assetType)
@@ -84,7 +79,6 @@ public sealed class AssetsWatcher : AssetPostprocessor
 		watchers.Add (w);
 		return w;
 	}
-	
 	
 	public static void UnWatch (Watcher watcher)
 	{
@@ -121,13 +115,13 @@ public class Watcher
 	public event FileMovedHandler OnMoved;
 		
 	public readonly string basePath;
-	public readonly UnityAssetType assetType;
+	public readonly UnityAssetType searchAssetTypes;
 	public readonly bool useSubdirectories;
 		
 	public Watcher (string path, UnityAssetType assetType, bool useSubdirectories)
 	{
 		this.basePath = Path.Combine ("Assets", path);
-		this.assetType = assetType;
+		this.searchAssetTypes = assetType;
 		this.useSubdirectories = useSubdirectories;
 	}
 		
@@ -148,7 +142,7 @@ public class Watcher
 		
 	internal void Modified (string[] paths)
 	{
-		InvokeEventForPaths (paths, OnDeleted);
+		InvokeEventForPaths (paths, OnModified);
 	}
 		
 //	internal void Renamed (string[] paths)
@@ -180,8 +174,7 @@ public class Watcher
 		foreach (var p in paths) {
 			if (IsValidPath (p)) {
 				AssetFileInfo asset = new AssetFileInfo (p);
-				// FIXME this should test a bit flag enum
-				if (asset.Type == assetType) {
+				if (searchAssetTypes == UnityAssetType.None || (searchAssetTypes & asset.Type) == asset.Type) {
 					e (asset);
 				}
 			}
