@@ -57,10 +57,14 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	}
 	
 	
+	public static Watcher Watch ()
+	{
+		return Watch ("", UnityAssetType.None, true);
+	}
 	
 	public static Watcher Watch (string path)
 	{
-		return Watch (path, true);
+		return Watch (path, UnityAssetType.None, true);
 	}
 	
 	public static Watcher Watch (string path, bool useSubdirectories)
