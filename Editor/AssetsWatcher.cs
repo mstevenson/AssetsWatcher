@@ -64,7 +64,7 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	}
 	
 	/// <summary>
-	/// Watch for all asset changes.
+	/// Watch for all asset changes in the project.
 	/// </summary>
 	public static Watcher Watch ()
 	{
@@ -72,11 +72,11 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	}
 	
 	/// <summary>
-	/// Watch the specified path and all of its subdirectories for asset changes.
+	/// Watch the specified path for asset changes.
 	/// </summary>
 	public static Watcher Watch (string path)
 	{
-		return Watch (path, UnityAssetType.None, true);
+		return Watch (path, UnityAssetType.None, false);
 	}
 	
 	/// <summary>
@@ -88,7 +88,17 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	}
 	
 	/// <summary>
-	/// Watch for all asset changes of the specified asset type.
+	/// Watch the specified path for the specified asset type.
+	/// </summary>
+	public static Watcher Watch (string path, UnityAssetType assetType)
+	{
+		Watcher w = new Watcher (path, assetType, false);
+		watchers.Add (w);
+		return w;
+	}
+	
+	/// <summary>
+	/// Watch for all asset changes in the project of the specified asset type.
 	/// </summary>
 	public static Watcher Watch (UnityAssetType assetType)
 	{
