@@ -36,19 +36,26 @@ public sealed class AssetsWatcher : AssetPostprocessor
 	{
 		string[] created = importedAssets.Except (allAssets).ToArray ();
 		string[] modified = importedAssets.Except (created).ToArray ();
-		string[] renamed =
-			(from current in movedAssets
-			join last in movedFromPaths
-				on Path.GetDirectoryName (current) equals Path.GetDirectoryName (last)
-			select current).ToArray ();
-		string[] moved = movedAssets.Except (renamed).ToArray ();
+		
+		Dictionary<string, string> allMoved = new Dictionary<string, string> ();
+		for (int i = 0; i < movedAssets.Length; i++) {
+			allMoved.Add (movedAssets [i], movedFromPaths [i]);
+		}
+		
+		// Renamed to, renamed from
+		Dictionary<string, string> renamed = 
+			(from m in allMoved
+			where (Path.GetDirectoryName (m.Key)) == (Path.GetDirectoryName (m.Value))
+			select m).ToDictionary (p => p.Key, p => p.Value);
+		
+		Dictionary<string, string> moved = allMoved.Except (renamed).ToDictionary (p => p.Key, p => p.Value);
 		
 		// Dispatch asset events to available watchers
 		foreach (Watcher w in watchers) {
 			w.Created (created);
 			w.Modified (modified);
-//			w.Renamed (renamed, renamedFrom);
-//			w.Moved (moved, movedFrom);
+			w.Renamed (renamed);
+			w.Moved (moved);
 			w.Deleted (deletedAssets);
 		}
 		
@@ -56,27 +63,41 @@ public sealed class AssetsWatcher : AssetPostprocessor
 		allAssets = AssetDatabase.GetAllAssetPaths ();
 	}
 	
-	
+	/// <summary>
+	/// Watch for all asset changes.
+	/// </summary>
 	public static Watcher Watch ()
 	{
 		return Watch ("", UnityAssetType.None, true);
 	}
 	
+	/// <summary>
+	/// Watch the specified path and all of its subdirectories for asset changes.
+	/// </summary>
 	public static Watcher Watch (string path)
 	{
 		return Watch (path, UnityAssetType.None, true);
 	}
 	
+	/// <summary>
+	/// Watch the specified path for asset changes, optionally including subdirectories.
+	/// </summary>
 	public static Watcher Watch (string path, bool useSubdirectories)
 	{
 		return Watch (path, UnityAssetType.None, useSubdirectories);
 	}
 	
+	/// <summary>
+	/// Watch for all asset changes of the specified asset type.
+	/// </summary>
 	public static Watcher Watch (UnityAssetType assetType)
 	{
 		return Watch ("", assetType, true);
 	}
 	
+	/// <summary>
+	/// Watch the specified path for the specified asset type, optionally including subdirectories.
+	/// </summary>
 	public static Watcher Watch (string path, UnityAssetType assetType, bool useSubdirectories)
 	{
 		Watcher w = new Watcher (path, assetType, useSubdirectories);
@@ -84,7 +105,10 @@ public sealed class AssetsWatcher : AssetPostprocessor
 		return w;
 	}
 	
-	public static void UnWatch (Watcher watcher)
+	/// <summary>
+	/// Stop dispatching events for the specified watcher.
+	/// </summary>
+	public static void Unwatch (Watcher watcher)
 	{
 		watchers.Remove (watcher);
 	}
@@ -94,8 +118,7 @@ public sealed class AssetsWatcher : AssetPostprocessor
 public class Watcher
 {
 	public delegate void FileEventHandler (AssetFileInfo asset);
-
-	public delegate void FileMovedHandler (AssetFileInfo assetBefore,AssetFileInfo assetAfter);
+	public delegate void FileMovedHandler (AssetFileInfo assetBefore, AssetFileInfo assetAfter);
 		
 	/// <summary>
 	/// Occurs when an asset is first created.
@@ -131,9 +154,12 @@ public class Watcher
 		
 	~Watcher ()
 	{
-		AssetsWatcher.UnWatch (this);
+		AssetsWatcher.Unwatch (this);
 	}
-		
+	
+	
+	#region AssetsWatcher Friend Methods
+	
 	internal void Created (string[] paths)
 	{
 		InvokeEventForPaths (paths, OnCreated);
@@ -149,27 +175,18 @@ public class Watcher
 		InvokeEventForPaths (paths, OnModified);
 	}
 		
-//	internal void Renamed (string[] paths)
-//	{
-//		if (OnRenamed == null)
-//			return;
-//		foreach (var p in paths) {
-//			if (IsValidPath (p)) {
-//				OnRenamed (new AssetFileInfo (p));
-//			}
-//		}
-//	}
-//		
-//	internal void Moved (string[] paths)
-//	{
-//		if (OnMoved == null)
-//			return;
-//		foreach (var p in paths) {
-//			if (IsValidPath (p)) {
-//				OnMoved (new AssetFileInfo (p));
-//			}
-//		}
-//	}
+	internal void Renamed (Dictionary<string, string> paths)
+	{
+		InvokeMovedEventForPaths (paths, OnRenamed);
+	}
+	
+	internal void Moved (Dictionary<string, string> paths)
+	{
+		InvokeMovedEventForPaths (paths, OnMoved);
+	}
+	
+	#endregion
+	
 	
 	private void InvokeEventForPaths (string[] paths, FileEventHandler e)
 	{
@@ -181,6 +198,18 @@ public class Watcher
 				if (searchAssetTypes == UnityAssetType.None || (searchAssetTypes & asset.Type) == asset.Type) {
 					e (asset);
 				}
+			}
+		}
+	}
+	
+	private void InvokeMovedEventForPaths (Dictionary<string, string> paths, FileMovedHandler e)
+	{
+		if (e == null)
+			return;
+		foreach (var p in paths) {
+			if (IsValidPath (p.Key)) {
+				// Path before, path after
+				e (new AssetFileInfo (p.Value), new AssetFileInfo (p.Key));
 			}
 		}
 	}
