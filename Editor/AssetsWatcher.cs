@@ -217,9 +217,12 @@ public class Watcher
 		if (e == null)
 			return;
 		foreach (var p in paths) {
-			if (IsValidPath (p.Key)) {
-				// Path before, path after
-				e (new AssetFileInfo (p.Value), new AssetFileInfo (p.Key));
+			bool beforePathValid = IsValidPath (p.Value);
+			bool afterPathValid = IsValidPath (p.Key);
+			if (beforePathValid || afterPathValid) {
+				var before = beforePathValid ? new AssetFileInfo (p.Value) : null;
+				var after = afterPathValid ? new AssetFileInfo (p.Key) : null;
+				e (before, after);
 			}
 		}
 	}
