@@ -31,11 +31,11 @@ namespace AssetsWatcher
 			
 			// Dispatch asset events to available watchers
 			foreach (Watcher w in Watcher.allWatchers) {
-				w.InvokeEventForPaths (created, w.onCreated);
-				w.InvokeEventForPaths (deletedAssets, w.onDeleted);
-				w.InvokeEventForPaths (modified, w.onModified);
-				w.InvokeMovedEventForPaths (renamed, w.onRenamed);
-				w.InvokeMovedEventForPaths (moved, w.onMoved);
+				w.InvokeEventForPaths (created, w.onAssetCreated);
+				w.InvokeEventForPaths (deletedAssets, w.onAssetDeleted);
+				w.InvokeEventForPaths (modified, w.onAssetModified);
+				w.InvokeMovedEventForPaths (renamed, w.onAssetRenamed);
+				w.InvokeMovedEventForPaths (moved, w.onAssetMoved);
 			}
 			
 			// Update asset paths cache

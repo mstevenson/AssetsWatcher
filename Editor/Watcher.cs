@@ -21,23 +21,23 @@ namespace AssetsWatcher
 		/// <summary>
 		/// Occurs when an asset is first created.
 		/// </summary>
-		public readonly FileEvent onCreated = new FileEvent ();
+		public readonly FileEvent onAssetCreated = new FileEvent ();
 		/// <summary>
 		/// Occurs when an asset is deleted or is moved out of scope.
 		/// </summary>
-		public readonly FileEvent onDeleted = new FileEvent ();
+		public readonly FileEvent onAssetDeleted = new FileEvent ();
 		/// <summary>
 		/// Occurs when the content of an asset is modified.
 		/// </summary>
-		public readonly FileEvent onModified = new FileEvent ();
+		public readonly FileEvent onAssetModified = new FileEvent ();
 		/// <summary>
 		/// Occurs when an asset is renamed in-place.
 		/// </summary>
-		public readonly FileMoveEvent onRenamed = new FileMoveEvent ();
+		public readonly FileMoveEvent onAssetRenamed = new FileMoveEvent ();
 		/// <summary>
 		/// Occurs when an asset is moved to a new location within scope.
 		/// </summary>
-		public readonly FileMoveEvent onMoved = new FileMoveEvent ();
+		public readonly FileMoveEvent onAssetMoved = new FileMoveEvent ();
 		
 		public readonly string basePath;
 		public readonly UnityAssetType observedAssetTypes;
@@ -122,11 +122,11 @@ namespace AssetsWatcher
 
 		public void Disable ()
 		{
-			onCreated.RemoveAllListeners ();
-			onDeleted.RemoveAllListeners ();
-			onModified.RemoveAllListeners ();
-			onMoved.RemoveAllListeners ();
-			onRenamed.RemoveAllListeners ();
+			onAssetCreated.RemoveAllListeners ();
+			onAssetDeleted.RemoveAllListeners ();
+			onAssetModified.RemoveAllListeners ();
+			onAssetMoved.RemoveAllListeners ();
+			onAssetRenamed.RemoveAllListeners ();
 			allWatchers.Remove (this);
 		}
 		
