@@ -62,7 +62,7 @@ namespace AssetsWatcher
 		
 		~Watcher ()
 		{
-			Watcher.RemoveObserver (this);
+			Watcher.RemoveWatcher (this);
 		}
 		
 		internal void InvokeEventForPaths (string[] paths, FileEvent e)
@@ -119,11 +119,21 @@ namespace AssetsWatcher
 			allWatchers.Add (w);
 			return w;
 		}
+
+		public void Disable ()
+		{
+			onCreated.RemoveAllListeners ();
+			onDeleted.RemoveAllListeners ();
+			onModified.RemoveAllListeners ();
+			onMoved.RemoveAllListeners ();
+			onRenamed.RemoveAllListeners ();
+			allWatchers.Remove (this);
+		}
 		
 		/// <summary>
 		/// Disable the specified watcher.
 		/// </summary>
-		public static void RemoveObserver (Watcher watcher)
+		static void RemoveWatcher (Watcher watcher)
 		{
 			allWatchers.Remove (watcher);
 		}
