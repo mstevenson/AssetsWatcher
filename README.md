@@ -5,35 +5,35 @@ AssetsWatcher is a Unity Editor extension that augments AssetPostprocessor by pr
 
 To create a new watcher:
 
-1. Add a static constructor to any Editor script.
-2. Add the InitializeOnLoad attribute to the script (this calls the static constructor when the Unity project is loaded).
-3. Call AssetsWatcher.Watch within the static constructor, passing in a desired base path and asset type flags. Store the returned Watcher object.
-4. Add delegate methods to the Watcher's events:
-	- OnCreated
-	- OnDeleted
-	- OnModified
-	- OnMoved
-	- OnRenamed
+1. Add a static constructor to any class.
+2. Add the InitializeOnLoad attribute to the class. This will enable the Unity Editor to call the static constructor when the project is loaded.
+3. Call Watcher.Observe from the static constructor, passing in a desired base path, asset type flags, and directory recursion flag. Keep a reference to the returned Watcher instance.
+4. Add listeners to the Watcher's UnityEvents:
+	- onCreated
+	- onDeleted
+	- onModified
+	- onMoved
+	- onRenamed
 
 Example implementation:
 	
 	[InitializeOnLoad]
-	public static class ExampleEditor : Editor
+	public static class AssetsWatcherExample
 	{
-		static ExampleEditor ()
+		static AssetsWatcherExample ()
 		{
-			Watcher watcher = AssetsWatcher.Watch ();
+			Watcher watcher = Watcher.Observe ();
 			
-			watcher.OnCreated += delegate(AssetFileInfo asset) {
+			watcher.onCreated.AddListener (asset => {
 				Debug.Log ("Created asset '" + asset.Name + "' of type " + asset.Type);
-			};
+			});
 		}
 	}
 
-You may specify a path to watch and asset type flags to match. You may also specify whether or not to search subdirectories of the given path. The following Watcher will respond to all texture and GUI Skin changes in Assets/Graphics/GUI, but will ignore files in its subdirectories:
+You may specify a path to watch and asset type flags to match. You may also specify whether or not to recursively search subdirectories below the given path. The following Watcher will respond to all texture and GUI Skin changes in Assets/Graphics/GUI, but will ignore files in its subdirectories:
 
-	Watcher watcher = AssetsWatcher.Watch ("Graphics/GUI", UnityAssetType.Texture | UnityAssetType.GUISkin, false);
+	Watcher watcher = Watcher.Observe ("Graphics/GUI", UnityAssetType.Texture | UnityAssetType.GUISkin, false);
 
 Each Watcher will return details about an asset event via an AssetFileInfo object. The OnMoved and OnRenamed events provide AssetFileInfo for both the original file state and the new file state.
 
-If you would like to disable a watcher, call AssetsWatcher.UnWatch (watcher)
+If you would like to disable a watcher, call watcher.Disable ().
