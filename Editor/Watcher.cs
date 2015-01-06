@@ -21,27 +21,27 @@ namespace AssetsWatcher
 		/// <summary>
 		/// Occurs when an asset is first created.
 		/// </summary>
-		public FileEvent onCreated = new FileEvent ();
+		public readonly FileEvent onCreated = new FileEvent ();
 		/// <summary>
 		/// Occurs when an asset is deleted or is moved out of scope.
 		/// </summary>
-		public FileEvent onDeleted = new FileEvent ();
+		public readonly FileEvent onDeleted = new FileEvent ();
 		/// <summary>
 		/// Occurs when the content of an asset is modified.
 		/// </summary>
-		public FileEvent onModified = new FileEvent ();
+		public readonly FileEvent onModified = new FileEvent ();
 		/// <summary>
 		/// Occurs when an asset is renamed in-place.
 		/// </summary>
-		public FileMoveEvent onRenamed = new FileMoveEvent ();
+		public readonly FileMoveEvent onRenamed = new FileMoveEvent ();
 		/// <summary>
 		/// Occurs when an asset is moved to a new location within scope.
 		/// </summary>
-		public FileMoveEvent onMoved = new FileMoveEvent ();
+		public readonly FileMoveEvent onMoved = new FileMoveEvent ();
 		
 		public readonly string basePath;
-		public readonly UnityAssetType searchAssetTypes;
-		public readonly bool useSubdirectories;
+		public readonly UnityAssetType observedAssetTypes;
+		public readonly bool recurseSubdirectories;
 
 		/// <summary>
 		/// Initialize the AssetsWatcher when a project is loaded.
@@ -53,11 +53,11 @@ namespace AssetsWatcher
 			allWatchers = new List<Watcher> ();
 		}
 
-		public Watcher (string path, UnityAssetType assetType, bool useSubdirectories)
+		Watcher (string path, UnityAssetType assetType, bool recurseSubdirectories)
 		{
 			this.basePath = Path.Combine ("Assets", path);
-			this.searchAssetTypes = assetType;
-			this.useSubdirectories = useSubdirectories;
+			this.observedAssetTypes = assetType;
+			this.recurseSubdirectories = recurseSubdirectories;
 		}
 		
 		~Watcher ()
@@ -65,52 +65,21 @@ namespace AssetsWatcher
 			Watcher.RemoveObserver (this);
 		}
 		
-		
-		#region Internal Event Handlers
-		
-		internal void Created (string[] paths)
-		{
-			InvokeEventForPaths (paths, onCreated);
-		}
-		
-		internal void Deleted (string[] paths)
-		{
-			InvokeEventForPaths (paths, onDeleted);
-		}
-		
-		internal void Modified (string[] paths)
-		{
-			InvokeEventForPaths (paths, onModified);
-		}
-		
-		internal void Renamed (Dictionary<string, string> paths)
-		{
-			InvokeMovedEventForPaths (paths, onRenamed);
-		}
-		
-		internal void Moved (Dictionary<string, string> paths)
-		{
-			InvokeMovedEventForPaths (paths, onMoved);
-		}
-		
-		#endregion
-		
-		
-		void InvokeEventForPaths (string[] paths, FileEvent e)
+		internal void InvokeEventForPaths (string[] paths, FileEvent e)
 		{
 			if (e == null)
 				return;
 			foreach (var p in paths) {
 				if (IsValidPath (p)) {
 					AssetFileInfo asset = new AssetFileInfo (p);
-					if (searchAssetTypes == UnityAssetType.None || (searchAssetTypes & asset.Type) == asset.Type) {
+					if (observedAssetTypes == UnityAssetType.None || (observedAssetTypes & asset.Type) == asset.Type) {
 						e.Invoke (asset);
 					}
 				}
 			}
 		}
 		
-		void InvokeMovedEventForPaths (Dictionary<string, string> paths, FileMoveEvent e)
+		internal void InvokeMovedEventForPaths (Dictionary<string, string> paths, FileMoveEvent e)
 		{
 			if (e == null)
 				return;
@@ -130,7 +99,7 @@ namespace AssetsWatcher
 		/// </summary>
 		bool IsValidPath (string assetPath)
 		{
-			if (useSubdirectories)
+			if (recurseSubdirectories)
 				return assetPath.StartsWith (this.basePath);
 			else
 				return Path.GetDirectoryName (assetPath) == this.basePath;
@@ -140,59 +109,19 @@ namespace AssetsWatcher
 		#region API
 
 		/// <summary>
-		/// Watch for all asset changes in the project.
+		/// Watch for changes to the given asset type flags in the given path, and optionally recursing subdirectories.
+		/// If no path is specified, the entire Assets folder will be used.
+		/// If no asset type is specified, all asset types will be observed.
 		/// </summary>
-		public static Watcher Observe ()
+		public static Watcher Observe (string path = "", UnityAssetType assetType = UnityAssetType.None, bool recurseSubdirectories = true)
 		{
-			return Observe ("", UnityAssetType.None, true);
-		}
-		
-		/// <summary>
-		/// Watch the specified path for asset changes.
-		/// </summary>
-		public static Watcher Observe (string path)
-		{
-			return Observe (path, UnityAssetType.None, false);
-		}
-		
-		/// <summary>
-		/// Watch the specified path for asset changes, optionally including subdirectories.
-		/// </summary>
-		public static Watcher Observe (string path, bool useSubdirectories)
-		{
-			return Observe (path, UnityAssetType.None, useSubdirectories);
-		}
-		
-		/// <summary>
-		/// Watch the specified path for the specified asset type.
-		/// </summary>
-		public static Watcher Observe (string path, UnityAssetType assetType)
-		{
-			Watcher w = new Watcher (path, assetType, false);
+			Watcher w = new Watcher (path, assetType, recurseSubdirectories);
 			allWatchers.Add (w);
 			return w;
 		}
 		
 		/// <summary>
-		/// Watch for all asset changes in the project of the specified asset type.
-		/// </summary>
-		public static Watcher Observe (UnityAssetType assetType)
-		{
-			return Observe ("", assetType, true);
-		}
-		
-		/// <summary>
-		/// Watch the specified path for the specified asset type, optionally including subdirectories.
-		/// </summary>
-		public static Watcher Observe (string path, UnityAssetType assetType, bool useSubdirectories)
-		{
-			Watcher w = new Watcher (path, assetType, useSubdirectories);
-			allWatchers.Add (w);
-			return w;
-		}
-		
-		/// <summary>
-		/// Stop dispatching events for the specified watcher.
+		/// Disable the specified watcher.
 		/// </summary>
 		public static void RemoveObserver (Watcher watcher)
 		{
