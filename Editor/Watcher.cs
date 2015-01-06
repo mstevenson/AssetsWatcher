@@ -13,7 +13,10 @@ namespace AssetsWatcher
 	{
 		public delegate void FileEventHandler (AssetFileInfo asset);
 		public delegate void FileMovedHandler (AssetFileInfo assetBefore, AssetFileInfo assetAfter);
-		
+
+		internal static string[] allAssets;
+		internal static List<Watcher> allWatchers;
+
 		/// <summary>
 		/// Occurs when an asset is first created.
 		/// </summary>
@@ -38,7 +41,17 @@ namespace AssetsWatcher
 		public readonly string basePath;
 		public readonly UnityAssetType searchAssetTypes;
 		public readonly bool useSubdirectories;
-		
+
+		/// <summary>
+		/// Initialize the AssetsWatcher when a project is loaded.
+		/// </summary>
+		static Watcher ()
+		{
+			// Cache asset paths
+			allAssets = AssetDatabase.GetAllAssetPaths ();
+			allWatchers = new List<Watcher> ();
+		}
+
 		public Watcher (string path, UnityAssetType assetType, bool useSubdirectories)
 		{
 			this.basePath = Path.Combine ("Assets", path);
@@ -48,11 +61,11 @@ namespace AssetsWatcher
 		
 		~Watcher ()
 		{
-			WatcherPostprocessor.Unwatch (this);
+			Watcher.Unobserve (this);
 		}
 		
 		
-		#region AssetsWatcher Friend Methods
+		#region Internal Event Handlers
 		
 		internal void Created (string[] paths)
 		{
@@ -79,7 +92,7 @@ namespace AssetsWatcher
 			InvokeMovedEventForPaths (paths, OnMoved);
 		}
 		
-#endregion
+		#endregion
 		
 		
 		void InvokeEventForPaths (string[] paths, FileEventHandler e)
@@ -121,5 +134,70 @@ namespace AssetsWatcher
 			else
 				return Path.GetDirectoryName (assetPath) == this.basePath;
 		}
+
+
+		#region API
+
+		/// <summary>
+		/// Watch for all asset changes in the project.
+		/// </summary>
+		public static Watcher Observe ()
+		{
+			return Observe ("", UnityAssetType.None, true);
+		}
+		
+		/// <summary>
+		/// Watch the specified path for asset changes.
+		/// </summary>
+		public static Watcher Observe (string path)
+		{
+			return Observe (path, UnityAssetType.None, false);
+		}
+		
+		/// <summary>
+		/// Watch the specified path for asset changes, optionally including subdirectories.
+		/// </summary>
+		public static Watcher Observe (string path, bool useSubdirectories)
+		{
+			return Observe (path, UnityAssetType.None, useSubdirectories);
+		}
+		
+		/// <summary>
+		/// Watch the specified path for the specified asset type.
+		/// </summary>
+		public static Watcher Observe (string path, UnityAssetType assetType)
+		{
+			Watcher w = new Watcher (path, assetType, false);
+			allWatchers.Add (w);
+			return w;
+		}
+		
+		/// <summary>
+		/// Watch for all asset changes in the project of the specified asset type.
+		/// </summary>
+		public static Watcher Observe (UnityAssetType assetType)
+		{
+			return Observe ("", assetType, true);
+		}
+		
+		/// <summary>
+		/// Watch the specified path for the specified asset type, optionally including subdirectories.
+		/// </summary>
+		public static Watcher Observe (string path, UnityAssetType assetType, bool useSubdirectories)
+		{
+			Watcher w = new Watcher (path, assetType, useSubdirectories);
+			allWatchers.Add (w);
+			return w;
+		}
+		
+		/// <summary>
+		/// Stop dispatching events for the specified watcher.
+		/// </summary>
+		public static void Unobserve (Watcher watcher)
+		{
+			allWatchers.Remove (watcher);
+		}
+
+		#endregion
 	}
 }
