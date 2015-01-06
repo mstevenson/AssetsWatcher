@@ -13,8 +13,8 @@ public static class AssetsWatcherExample
 	{
 		var watcher = Watcher.Observe ();
 		
-		watcher.OnCreated += delegate(AssetFileInfo asset) {
-			Debug.Log ("Created asset '" + asset.Name + "' of type " + asset.Type);
-		};
+		watcher.onCreated.AddListener (asset => {
+			Debug.Log ("<color=yellow>[AssetsWatcherExample]</color> Created asset '" + asset.Name + "' of type " + asset.Type);
+		});
 	}
 }

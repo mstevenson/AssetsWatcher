@@ -6,13 +6,14 @@ using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using UnityEngine.Events;
 
 namespace AssetsWatcher
 {
 	public class Watcher
 	{
-		public delegate void FileEventHandler (AssetFileInfo asset);
-		public delegate void FileMovedHandler (AssetFileInfo assetBefore, AssetFileInfo assetAfter);
+		public class FileEvent : UnityEvent<AssetFileInfo> {}
+		public class FileMoveEvent : UnityEvent<AssetFileInfo, AssetFileInfo> {} // AssetFileInfo before and after the move
 
 		internal static string[] allAssets;
 		internal static List<Watcher> allWatchers;
@@ -20,23 +21,23 @@ namespace AssetsWatcher
 		/// <summary>
 		/// Occurs when an asset is first created.
 		/// </summary>
-		public event FileEventHandler OnCreated;
+		public FileEvent onCreated = new FileEvent ();
 		/// <summary>
 		/// Occurs when an asset is deleted or is moved out of scope.
 		/// </summary>
-		public event FileEventHandler OnDeleted;
+		public FileEvent onDeleted = new FileEvent ();
 		/// <summary>
 		/// Occurs when the content of an asset is modified.
 		/// </summary>
-		public event FileEventHandler OnModified;
+		public FileEvent onModified = new FileEvent ();
 		/// <summary>
 		/// Occurs when an asset is renamed in-place.
 		/// </summary>
-		public event FileMovedHandler OnRenamed;
+		public FileMoveEvent onRenamed = new FileMoveEvent ();
 		/// <summary>
 		/// Occurs when an asset is moved to a new location within scope.
 		/// </summary>
-		public event FileMovedHandler OnMoved;
+		public FileMoveEvent onMoved = new FileMoveEvent ();
 		
 		public readonly string basePath;
 		public readonly UnityAssetType searchAssetTypes;
@@ -61,7 +62,7 @@ namespace AssetsWatcher
 		
 		~Watcher ()
 		{
-			Watcher.Unobserve (this);
+			Watcher.RemoveObserver (this);
 		}
 		
 		
@@ -69,33 +70,33 @@ namespace AssetsWatcher
 		
 		internal void Created (string[] paths)
 		{
-			InvokeEventForPaths (paths, OnCreated);
+			InvokeEventForPaths (paths, onCreated);
 		}
 		
 		internal void Deleted (string[] paths)
 		{
-			InvokeEventForPaths (paths, OnDeleted);
+			InvokeEventForPaths (paths, onDeleted);
 		}
 		
 		internal void Modified (string[] paths)
 		{
-			InvokeEventForPaths (paths, OnModified);
+			InvokeEventForPaths (paths, onModified);
 		}
 		
 		internal void Renamed (Dictionary<string, string> paths)
 		{
-			InvokeMovedEventForPaths (paths, OnRenamed);
+			InvokeMovedEventForPaths (paths, onRenamed);
 		}
 		
 		internal void Moved (Dictionary<string, string> paths)
 		{
-			InvokeMovedEventForPaths (paths, OnMoved);
+			InvokeMovedEventForPaths (paths, onMoved);
 		}
 		
 		#endregion
 		
 		
-		void InvokeEventForPaths (string[] paths, FileEventHandler e)
+		void InvokeEventForPaths (string[] paths, FileEvent e)
 		{
 			if (e == null)
 				return;
@@ -103,13 +104,13 @@ namespace AssetsWatcher
 				if (IsValidPath (p)) {
 					AssetFileInfo asset = new AssetFileInfo (p);
 					if (searchAssetTypes == UnityAssetType.None || (searchAssetTypes & asset.Type) == asset.Type) {
-						e (asset);
+						e.Invoke (asset);
 					}
 				}
 			}
 		}
 		
-		void InvokeMovedEventForPaths (Dictionary<string, string> paths, FileMovedHandler e)
+		void InvokeMovedEventForPaths (Dictionary<string, string> paths, FileMoveEvent e)
 		{
 			if (e == null)
 				return;
@@ -119,7 +120,7 @@ namespace AssetsWatcher
 				if (beforePathValid || afterPathValid) {
 					var before = beforePathValid ? new AssetFileInfo (p.Value) : null;
 					var after = afterPathValid ? new AssetFileInfo (p.Key) : null;
-					e (before, after);
+					e.Invoke (before, after);
 				}
 			}
 		}
@@ -193,7 +194,7 @@ namespace AssetsWatcher
 		/// <summary>
 		/// Stop dispatching events for the specified watcher.
 		/// </summary>
-		public static void Unobserve (Watcher watcher)
+		public static void RemoveObserver (Watcher watcher)
 		{
 			allWatchers.Remove (watcher);
 		}
