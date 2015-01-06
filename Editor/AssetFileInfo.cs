@@ -25,12 +25,17 @@ namespace AssetsWatcher
 		Video = 1 << 10,
 		Cubemap = 1 << 11,
 		Animation = 1 << 12,
-		Flare = 1 << 13,
+		LensFlare = 1 << 13,
 		GUISkin = 1 << 14,
 		PhysicMaterial = 1 << 15,
 		Font = 1 << 16,
 		Prefab = 1 << 17,
-		RenderTexture = 1 << 18
+		RenderTexture = 1 << 18,
+		ComputeShader = 1 << 19,
+		AnimatorController = 1 << 20,
+		AnimatorOverrideController = 1 << 21,
+		AvatarMask = 1 << 22,
+		Physics2DMaterial = 1 << 23,
 	}
 	
 	public class AssetFileInfo
@@ -61,10 +66,15 @@ namespace AssetsWatcher
 			{ UnityAssetType.Animation, new string[] {".anim"} },
 			{ UnityAssetType.GUISkin, new string[] {".guiskin"} },
 			{ UnityAssetType.PhysicMaterial, new string[] {".physicMaterial"} },
-			{ UnityAssetType.Flare, new string[] {".flare"} },
+			{ UnityAssetType.LensFlare, new string[] {".flare"} },
 			{ UnityAssetType.Font, new string[] {".fontsettings"} },
 			{ UnityAssetType.Prefab, new string[] {".prefab"} },
-			{ UnityAssetType.RenderTexture, new string[] {".renderTexture"} }
+			{ UnityAssetType.RenderTexture, new string[] {".renderTexture"} },
+			{ UnityAssetType.ComputeShader, new string[] {".compute"} },
+			{ UnityAssetType.AnimatorController, new string[] {".controller"} },
+			{ UnityAssetType.AnimatorOverrideController, new string[] {".overrideController"} },
+			{ UnityAssetType.AvatarMask, new string[] {".mask"} },
+			{ UnityAssetType.Physics2DMaterial, new string[] {".physicsMaterial2D"} },
 		};
 		
 		public AssetFileInfo (string path)
